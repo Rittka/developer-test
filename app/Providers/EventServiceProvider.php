@@ -18,10 +18,10 @@ class EventServiceProvider extends ServiceProvider
      */
     protected $listen = [
         CommentWritten::class => [
-            CommentAchievementUnlocked::class
+            AchievementUnlocked::class
         ],
         LessonWatched::class => [
-            LessonAchievementUnlocked::class
+            AchievementUnlocked::class
         ],
     ];
 
