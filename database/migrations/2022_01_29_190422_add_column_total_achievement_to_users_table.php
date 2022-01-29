@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAchievementTypesTable extends Migration
+class AddColumnTotalAchievementToUsersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,8 @@ class CreateAchievementTypesTable extends Migration
      */
     public function up()
     {
-        Schema::create('achievement_types', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->integer('total_achievement')->after('password')->default(0);
         });
     }
 
@@ -26,6 +25,8 @@ class CreateAchievementTypesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('achievement_types');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('total_achievement');
+        });
     }
 }
