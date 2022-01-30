@@ -3,8 +3,12 @@
 namespace App\Models;
 
 use App\Models\Comment;
+use App\Models\Achievement;
+use App\Models\Badge;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
@@ -57,7 +61,7 @@ class User extends Authenticatable
      */
     public function lessons()
     {
-        return $this->belongsToMany(Lesson::class , 'lesson_user');
+        return $this->belongsToMany(Lesson::class);
     }
 
     /**
@@ -69,10 +73,14 @@ class User extends Authenticatable
     }
 
     public function lastLessonWatchedAchievement(){
-        return $this->belongsTo(Achievement::class)->where('type' , 'LESSON_WATCHED');
+        return $this->belongsTo(Achievement::class , 'lesson_achievement_id')->where('type' , 'LESSON_WATCHED');
     }
-    public function LastCommentWrittenAchievement(){
-        return $this->belongsTo(Achievement::class)->where('type' , 'COMMENT_WRITTEN');
+    public function lastCommentWrittenAchievement(){
+        return $this->belongsTo(Achievement::class , 'comment_achievement_id')->where('type' , 'COMMENT_WRITTEN');
+    }
+
+    public function badge(){
+        return $this->belongsTo(Badge::class , 'badge_id');
     }
 
     public function lessonsWatchedAchievementsCount(){
