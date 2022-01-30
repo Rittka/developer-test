@@ -42,6 +42,29 @@ class AchievementUnlocked
     public function onLessonWatched($lesson , $user) {
         $user->lessons()->updateExistingPivot($lesson->id, ['watched' => true]);
 
+        $lessonAchievement = $user->lastLessonWatchedAchievement();
+        $watched_count = $user->watched()->count();
+        if(isset($lessonAchievement)){
+            if($watched_count > $lessonAchievement->goal){
+                $next_achievement = Achievement::where('goal' , '>' ,$lessonAchievement->goal )
+                                                ->where('type' , 'LESSON_WATCHED')->first();
+                if($watched_count >= $next_achievement->goal){
+                    $user->lesson_achievement_id = $next_achievement->id ;
+                    $user->save();
+                    $user->unLockedAchievement[] = $next_achievement->title;
+                }
+            }else{
+
+                $earned_achievement = Achievement::where('goal' , $watched_count )
+                ->where('type' , 'LESSON_WATCHED')->first();
+
+                $user->lesson_achievement_id   = $earned_achievement->id ;
+                $user->unLockedAchievement[]    = $earned_achievement->title;
+
+            }
+
+        }
+
 
     }
 
