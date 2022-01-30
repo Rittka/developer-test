@@ -7,66 +7,92 @@ use Illuminate\Queue\InteractsWithQueue;
 use App\Events\CommentWritten;
 use App\Events\LessonWatched;
 use App\Models\Achievement;
+use App\Models\User;
 
 class AchievementUnlocked
 {
     public function onCommentWritten($comment) {
         $user_id = $comment->user_id ;
         $user = User::find($user_id);
+        $type = 'COMMENT_WRITTEN';
 
-        $commentAchievement = $user->lastCommentWrittenAchievement();
+        $commentAchievement = $user->lastAchievement($type);
         $comments_count = $user->comments()->count();
         if(isset($commentAchievement)){
-
-            if($comments_count > $commentAchievement->goal){
-                $next_achievement = Achievement::where('goal' , '>' ,$commentAchievement->goal )
-                                                ->where('type' , 'COMMENT_WRITTEN')->first();
-                if($comments_count >= $next_achievement->goal){
-                    $user->comment_achievement_id = $next_achievement->id ;
-                    $user->save();
-                    $user->unLockedAchievement[] = $next_achievement->title;
-                }
+           $newAchievement = $this->isNewAchievement($comments_count , $commentAchievement);
+           if($newAchievement){
+               $this->unloackAchievement($user , $type);
             }
+
         }else{
-            $earned_achievement = Achievement::where('goal' , $comments_count )
-            ->where('type' , 'COMMENT_WRITTEN')->first();
+            $earned_achievement = $this->getFirstAchivement($type);
+            $this->updateUser($user , $earned_achievement);
 
-            $user->comment_achievement_id   = $earned_achievement->id ;
-            $user->unLockedAchievement[]    = $earned_achievement->title;
         }
-
-
 
     }
 
     public function onLessonWatched($lesson , $user) {
+
         $user->lessons()->updateExistingPivot($lesson->id, ['watched' => true]);
-
-        $lessonAchievement = $user->lastLessonWatchedAchievement();
+        $type = 'LESSON_WATCHED';
+        $lesson_achievement = $user->lastAchievement($type);
         $watched_count = $user->watched()->count();
+
         if(isset($lessonAchievement)){
-            if($watched_count > $lessonAchievement->goal){
-                $next_achievement = Achievement::where('goal' , '>' ,$lessonAchievement->goal )
-                                                ->where('type' , 'LESSON_WATCHED')->first();
-                if($watched_count >= $next_achievement->goal){
-                    $user->lesson_achievement_id = $next_achievement->id ;
-                    $user->save();
-                    $user->unLockedAchievement[] = $next_achievement->title;
-                }
+           $newAchievement = $this->isNewAchievement($watched_count , $lesson_achievement);
+           if($newAchievement){
+               $this->unloackAchievement($user , $type);
             }else{
-
-                $earned_achievement = Achievement::where('goal' , $watched_count )
-                ->where('type' , 'LESSON_WATCHED')->first();
-
-                $user->lesson_achievement_id   = $earned_achievement->id ;
-                $user->unLockedAchievement[]    = $earned_achievement->title;
-
+                $earned_achievement = $this->getFirstAchivement($type);
+                $this->updateUser($user , $earned_achievement);
             }
 
         }
 
 
     }
+
+    function getFirstAchivement($type){
+        return Achievement::where('goal' , 1)->where('type' , $type)->first();
+    }
+
+    function unloackAchievement(User $user , $type){
+        $last_achivement = $user->lastAchievement($type);
+        $earned_achievement = $this->nextAchievement($last_achivement);
+        $this->updateUser($user , $earned_achievement);
+    }
+
+    function updateUser(User $user , Achievement $achievement){
+        if($achievement->type == 'COMMENT_WRITTEN'){
+            $user->comment_achievement_id   = $earned_achievement->id ;
+        }else{
+            $user->lesson_achievement_id   = $earned_achievement->id ;
+        }
+        $user->save();
+
+    }
+
+    function isNewAchievement($count , Achievement $achievement){
+        if($count > $achievement->goal){
+            $next_achievement = $this->nextAchievement($achievement);
+            if($comments_count >= $next_achievement->goal){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+
+    }
+
+    function nextAchievement(Achievement $achievement){
+        return Achievement::where('goal' , '>' ,$achievement->goal )
+                            ->where('type' , $achievement->type)->first();
+    }
+
+
 
 
     public function subscribe($events)

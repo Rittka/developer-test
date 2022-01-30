@@ -72,32 +72,55 @@ class User extends Authenticatable
         return $this->belongsToMany(Lesson::class)->wherePivot('watched', true);
     }
 
-    public function lastLessonWatchedAchievement(){
-        return $this->belongsTo(Achievement::class , 'lesson_achievement_id')->where('type' , 'LESSON_WATCHED');
+    public function lastAchievement($type){
+        if($type == 'COMMENT_WRITTEN')
+            return $this->belongsTo(Achievement::class , 'comment_achievement_id')->where('type' , 'COMMENT_WRITTEN');
+        else{
+            return $this->belongsTo(Achievement::class , 'lesson_achievement_id')->where('type' , 'LESSON_WATCHED');
+        }
     }
-    public function lastCommentWrittenAchievement(){
-        return $this->belongsTo(Achievement::class , 'comment_achievement_id')->where('type' , 'COMMENT_WRITTEN');
+
+    function earnedAchievementsCount($achievement_type){
+        if($achievement_type == 'LESSON_WATCHED'){
+            if(isset($this->lesson_achievement_id)){
+                $watched = $this->watched()->count();
+                $count = Achievement::where('type', 'LESSON_WATCHED')
+                ->where('goal' , '<=' , $watched)
+                ->count();
+            }else{
+                $count = 0;
+            }
+        }else{
+            if(isset($this->comment_achievement_id)){
+                $written = $this->comments()->count();
+                $count = Achievement::where('type', 'COMMENT_WRITTEN')
+                ->where('goal' , '<=' , $written)
+                ->count();
+            }else{
+                $count = 0;
+            }
+
+        }
+
     }
+
 
     public function badge(){
         return $this->belongsTo(Badge::class , 'badge_id');
     }
 
-    public function lessonsWatchedAchievementsCount(){
-        $watched = $this->watched()->count();
-        $achievements = Achievement::where('type', 'LESSON_WATCHED')
-                                    ->where('goal' , '<=' , $watched)
-                                    ->count();
-        return $achievements;
+
+
+    public function totalEarnedAchievementsCount(){
+        $lesson_achievements = earnedAchievementsCount('LESSON_WATCHED');
+        $comment_achievements = earnedAchievementsCount('COMMENT_WRITTEN');
+
+        $total = $lesson_achievements + $comment_achievements;
+
+        return $total;
     }
 
-    public function commentsWrittenAchievementsCount(){
-        $written = $this->comments()->count();
-        $achievements = Achievement::where('type', 'COMMENT_WRITTEN')
-                                    ->where('goal' , '<=' , $written)
-                                    ->count();
-        return $achievements;
-    }
+
 
 
 
