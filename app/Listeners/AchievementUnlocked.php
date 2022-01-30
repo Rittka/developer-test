@@ -15,11 +15,10 @@ class AchievementUnlocked
         $user_id = $comment->user_id ;
         $user = User::find($user_id);
         $type = 'COMMENT_WRITTEN';
+        $commentAchievement = $user->currentAchievement($type);
 
-        $commentAchievement = $user->lastAchievement($type);
-        $comments_count = $user->comments()->count();
         if(isset($commentAchievement)){
-           $newAchievement = $this->isNewAchievement($comments_count , $commentAchievement);
+           $newAchievement = $user->isNewAchievement($type);
            if($newAchievement){
                $this->unloackAchievement($user , $type);
             }
@@ -36,11 +35,10 @@ class AchievementUnlocked
 
         $user->lessons()->updateExistingPivot($lesson->id, ['watched' => true]);
         $type = 'LESSON_WATCHED';
-        $lesson_achievement = $user->lastAchievement($type);
-        $watched_count = $user->watched()->count();
+        $lesson_achievement = $user->currentAchievement($type);
 
         if(isset($lessonAchievement)){
-           $newAchievement = $this->isNewAchievement($watched_count , $lesson_achievement);
+           $newAchievement = $user->isNewAchievement($type);
            if($newAchievement){
                $this->unloackAchievement($user , $type);
             }else{
@@ -58,8 +56,8 @@ class AchievementUnlocked
     }
 
     function unloackAchievement(User $user , $type){
-        $last_achivement = $user->lastAchievement($type);
-        $earned_achievement = $this->nextAchievement($last_achivement);
+
+        $earned_achievement = $user->nextAchievement($type);
         $this->updateUser($user , $earned_achievement);
     }
 
@@ -71,26 +69,29 @@ class AchievementUnlocked
         }
         $user->save();
 
-    }
+        $next_badge = $user->nextBadge();
+        $user_unlocked_achievement_count = $user->totalEarnedAchievementsCount();
 
-    function isNewAchievement($count , Achievement $achievement){
-        if($count > $achievement->goal){
-            $next_achievement = $this->nextAchievement($achievement);
-            if($comments_count >= $next_achievement->goal){
-                return true;
-            }else{
-                return false;
-            }
-        }else{
-            return false;
+        if($this->CanUnlockBadge($user_unlocked_achievement_count , $next_badge->goal)){
+            $this->unlockBadg($user , $next_badge->id);
         }
 
     }
 
-    function nextAchievement(Achievement $achievement){
-        return Achievement::where('goal' , '>' ,$achievement->goal )
-                            ->where('type' , $achievement->type)->first();
+    function CanUnlockBadge($unlocked_achievement_count ,  $goal){
+        if($unlocked_achievement_count > $goal){
+            return true;
+        }else{
+            return false;
+        }
     }
+
+    function unlockBadg(User $user , $new_badge_id){
+        $user->badge_id = $new_badge_id;
+        $user->save();
+    }
+
+
 
 
 
