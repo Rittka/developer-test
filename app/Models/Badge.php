@@ -14,5 +14,6 @@ class Badge extends Model
         'goal',
         'note'
     ];
+    protected $table = 'badges';
 
 }

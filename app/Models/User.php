@@ -24,7 +24,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'total_achievement'
+        'comment_achievement_id',
+        'lesson_achievement_id',
+        'badge_id'
+
     ];
 
     /**
@@ -68,39 +71,66 @@ class User extends Authenticatable
         return $this->belongsToMany(Lesson::class)->wherePivot('watched', true);
     }
 
-    function currentAchievement($type){
-        if($this->isCommentWritten($type))
-            return $this->belongsTo(Achievement::class , 'comment_achievement_id')->where('type' , 'COMMENT_WRITTEN');
-        else{
-            return $this->belongsTo(Achievement::class , 'lesson_achievement_id')->where('type' , 'LESSON_WATCHED');
+    function getTotalUnlockedAchievement(){
+        if($this->earnedAchievementsCount('COMMENT_WRITTEN') > 0){
+            $temp = $this->getUnlockedAchievement('COMMENT_WRITTEN',$this->comments()->count());
+            if($this->earnedAchievementsCount('LESSON_WATCHED') > 0){
+                $total = $this->getUnlockedAchievement('LESSON_WATCHED',$this->watched()->count())->union($temp)->get();
+            }else{
+                $total = $temp->get();
+            }
+
+        }else{
+            if($this->earnedAchievementsCount('LESSON_WATCHED') > 0){
+                $temp = $this->getUnlockedAchievement('LESSON_WATCHED',$this->watched()->count());
+                $total = $temp->get();
+
+            }else{
+                $total = [];
+            }
         }
+
+        return $total;
     }
+
+    function currentCommentAchievement(){
+        return $this->belongsTo(Achievement::class  , 'comment_achievement_id');
+    }
+
+    function currentLessonAchievement(){
+
+        return $this->belongsTo(Achievement::class  , 'lesson_achievement_id');
+    }
+
 
     function isCommentWritten($type){
         return ($type == 'COMMENT_WRITTEN') ? true : false ;
+    }
+
+    function getUnlockedAchievement($type , $goal){
+        $achievements =  Achievement::where('type', $type)->where('goal' , '<=' , $goal);
+        return $achievements;
     }
 
     function earnedAchievementsCount($achievement_type){
         if($this->isCommentWritten($achievement_type)){
             if(isset($this->comment_achievement_id)){
                 $written = $this->comments()->count();
-                $count = Achievement::where('type', 'COMMENT_WRITTEN')
-                ->where('goal' , '<=' , $written)
-                ->count();
+                $count = $this->getUnlockedAchievement($achievement_type , $written)->count();
             }else{
                 $count = 0;
             }
         }else{
             if(isset($this->lesson_achievement_id)){
                 $watched = $this->watched()->count();
-                $count = Achievement::where('type', 'LESSON_WATCHED')
-                ->where('goal' , '<=' , $watched)
-                ->count();
+                $count = $this->getUnlockedAchievement($achievement_type , $watched)->count();
             }else{
                 $count = 0;
             }
 
         }
+
+        return $count;
 
     }
 
@@ -110,15 +140,15 @@ class User extends Authenticatable
     }
 
     function nextBadge(){
-        $curren_badge = $this->badge();
+        $curren_badge = $this->badge;
         return Badge::where('goal' , '>' ,$curren_badge->goal )->orderBy('goal')->first();
     }
 
 
 
     public function totalEarnedAchievementsCount(){
-        $lesson_achievements = earnedAchievementsCount('LESSON_WATCHED');
-        $comment_achievements = earnedAchievementsCount('COMMENT_WRITTEN');
+        $lesson_achievements = $this->earnedAchievementsCount('LESSON_WATCHED');
+        $comment_achievements = $this->earnedAchievementsCount('COMMENT_WRITTEN');
 
         $total = $lesson_achievements + $comment_achievements;
 
@@ -126,7 +156,13 @@ class User extends Authenticatable
     }
 
     function nextAchievement($type){
-        $curren_achievement = $this->currentAchievement($type);
+
+        if($this->isCommentWritten($type)){
+            $curren_achievement = $this->currentCommentAchievement;
+        }else{
+            $curren_achievement = $this->currentLessonAchievement;
+        }
+
         return Achievement::where('goal' , '>' ,$curren_achievement->goal )
                             ->where('type' , $curren_achievement->type)->orderBy('goal')->first();
     }

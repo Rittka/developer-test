@@ -15,6 +15,7 @@ class Achievement extends Model
         'type',
         'note'
     ];
+    protected $table = 'achievements';
 
 
 
