@@ -33,6 +33,8 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    public $unLockedAchievement = [];
+
     /**
      * The attributes that should be cast to native types.
      *
@@ -65,4 +67,31 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Lesson::class)->wherePivot('watched', true);
     }
+
+    public function lastLessonWatchedAchievement(){
+        return $this->belongsTo(Achievement::class)->where('type' , 'LESSON_WATCHED');
+    }
+    public function LastCommentWrittenAchievement(){
+        return $this->belongsTo(Achievement::class)->where('type' , 'COMMENT_WRITTEN');
+    }
+
+    public function lessonsWatchedAchievementsCount(){
+        $watched = $this->watched()->count();
+        $achievements = Achievement::where('type', 'LESSON_WATCHED')
+                                    ->where('goal' , '<=' , $watched)
+                                    ->count();
+        return $achievements;
+    }
+
+    public function commentsWrittenAchievementsCount(){
+        $written = $this->comments()->count();
+        $achievements = Achievement::where('type', 'COMMENT_WRITTEN')
+                                    ->where('goal' , '<=' , $written)
+                                    ->count();
+        return $achievements;
+    }
+
+
+
+
 }

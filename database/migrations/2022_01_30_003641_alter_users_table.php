@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumnTotalAchievementToUsersTable extends Migration
+class AlterUsersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,7 +14,12 @@ class AddColumnTotalAchievementToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->integer('total_achievement')->after('password')->default(0);
+            $table->unsignedBigInteger('comment_achievement_id')->nullable();
+            $table->unsignedBigInteger('lesson_achievement_id')->nullable();
+            $table->unsignedBigInteger('badge_id')->default(1);
+
+
+
         });
     }
 
@@ -26,7 +31,8 @@ class AddColumnTotalAchievementToUsersTable extends Migration
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('total_achievement');
+            $table->dropColumn(['comment_achievement_id', 'lesson_achievement_id', 'last_badge_id']);
+
         });
     }
 }

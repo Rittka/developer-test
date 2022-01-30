@@ -15,4 +15,7 @@ class Achievement extends Model
         'type',
         'note'
     ];
+
+
+
 }
