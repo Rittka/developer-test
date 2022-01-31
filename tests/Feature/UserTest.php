@@ -23,7 +23,7 @@ class UserTest extends TestCase
 
     }
 
-    public function init_user_data(){
+    public function test_init_user_data(){
         $user = User::factory()->hasAttached(Lesson::factory()->count(1),
                                             ['watched' => 0])->create();
 
@@ -31,10 +31,13 @@ class UserTest extends TestCase
         $this->assertTrue($user->isFirstAchievement('LESSON_WATCHED'));
         $this->assertEquals(0 ,$user->watched()->count());
         $this->assertEquals(0 ,$user->comments()->count());
-        $this->assertEquals(0 ,$user->getTotalUnlockedAchievement()->count());
-        $this->assertEquals(0 ,$user->earnedAchievementsCount());
+        $this->assertEquals(0 ,count($user->getTotalUnlockedAchievement()));
+        $this->assertEquals(0 ,$user->earnedAchievementsCount('COMMENT_WRITTEN'));
+        $this->assertEquals(0 ,$user->earnedAchievementsCount('LESSON_WATCHED'));
         $this->assertEquals('Beginner' ,$user->badge->title);
-        $this->assertEquals('Intermediate' ,$user->nextBadge->title);
+        $this->assertEquals('Intermediate' ,$user->nextBadge()->title);
+        $this->assertEquals('First Lesson Watched' ,$user->nextAchievement('LESSON_WATCHED')->title);
+        $this->assertEquals('First Comment Written' ,$user->nextAchievement('COMMENT_WRITTEN')->title);
 
 
     }
@@ -42,11 +45,8 @@ class UserTest extends TestCase
     public function test_write_comment_event(){
         Event::fake();
         $comment = Comment::factory()->create();
-
         CommentWritten::dispatch($comment);
-
         Event::assertDispatched(CommentWritten::class);
-
         Event::assertListening(CommentWritten::class ,AchievementUnlocked::class );
     }
 
@@ -54,11 +54,8 @@ class UserTest extends TestCase
         Event::fake();
         $lesson = Lesson::factory()->create();
         $user = User::factory()->create();
-
         LessonWatched::dispatch($lesson , $user);
-
         Event::assertDispatched(LessonWatched::class);
-
         Event::assertListening(LessonWatched::class ,AchievementUnlocked::class );
     }
 }

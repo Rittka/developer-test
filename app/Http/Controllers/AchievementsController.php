@@ -13,8 +13,16 @@ class AchievementsController extends Controller
         $current_badge_title = $user->badge->title;
 
         $next_badge = $user->nextBadge();
-        $next_badge_title = $next_badge->title;
-        $remaing_to_unlock_next_badge = $next_badge->goal - $user->totalEarnedAchievementsCount();
+        if(isset($next_badge)){
+            $next_badge_title = $next_badge->title;
+            $remaing_to_unlock_next_badge = $next_badge->goal - $user->totalEarnedAchievementsCount();
+
+        }else{
+            $next_badge_title = 'You are a Master, no need to more badges';
+            $remaing_to_unlock_next_badge = 0;
+
+        }
+
 
         return response()->json([
             'unlocked_achievements' => $unlocked_achievements,

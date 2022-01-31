@@ -141,7 +141,14 @@ class User extends Authenticatable
 
     function nextBadge(){
         $curren_badge = $this->badge;
-        return Badge::where('goal' , '>' ,$curren_badge->goal )->orderBy('goal')->first();
+        if($curren_badge->title == 'Master'){
+            return null ;
+        }else{
+
+            return Badge::where('goal' , '>' ,$curren_badge->goal )->orderBy('goal')->first();
+        }
+
+
     }
 
 
@@ -168,6 +175,8 @@ class User extends Authenticatable
             }else{
                 $curren_achievement = $this->currentLessonAchievement;
             }
+
+
 
             return Achievement::where('goal' , '>' ,$curren_achievement->goal )
                                 ->where('type' , $curren_achievement->type)->orderBy('goal')->first();
