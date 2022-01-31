@@ -157,14 +157,38 @@ class User extends Authenticatable
 
     function nextAchievement($type){
 
-        if($this->isCommentWritten($type)){
-            $curren_achievement = $this->currentCommentAchievement;
-        }else{
-            $curren_achievement = $this->currentLessonAchievement;
-        }
+        if($this->isFirstAchievement($type)){
+           return Achievement::where('goal' , 1 )
+                                ->where('type' , $type)->first();
 
-        return Achievement::where('goal' , '>' ,$curren_achievement->goal )
-                            ->where('type' , $curren_achievement->type)->orderBy('goal')->first();
+        }else{
+
+            if($this->isCommentWritten($type)){
+                $curren_achievement = $this->currentCommentAchievement;
+            }else{
+                $curren_achievement = $this->currentLessonAchievement;
+            }
+
+            return Achievement::where('goal' , '>' ,$curren_achievement->goal )
+                                ->where('type' , $curren_achievement->type)->orderBy('goal')->first();
+        }
+    }
+
+    function isFirstAchievement($type){
+        if($this->isCommentWritten($type)){
+            if(isset($this->comment_achievement_id)){
+                return false;
+            }else{
+                return true;
+            }
+        }else{
+            if(isset($this->lesson_achievement_id)){
+                return false;
+            }else{
+                return true;
+            }
+
+        }
     }
 
 

@@ -4,8 +4,8 @@ namespace App\Providers;
 
 use App\Events\LessonWatched;
 use App\Events\CommentWritten;
-use App\Listeners\CommentAchievementUnlocked;
-use App\Listeners\LessonAchievementUnlocked;
+use App\Listeners\AchievementUnlocked;
+
 use Illuminate\Support\Facades\Event;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 

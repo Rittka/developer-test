@@ -8,10 +8,15 @@ use App\Events\CommentWritten;
 use App\Events\LessonWatched;
 use App\Models\Achievement;
 use App\Models\User;
+use App\Models\Lesson;
+use App\Models\Comment;
 
 class AchievementUnlocked
 {
-    public function onCommentWritten($comment) {
+    function __invoke(){
+
+    }
+    public function onCommentWritten(Comment $comment) {
         $user_id = $comment->user_id ;
         $user = User::find($user_id);
         $type = 'COMMENT_WRITTEN';
@@ -31,7 +36,7 @@ class AchievementUnlocked
 
     }
 
-    public function onLessonWatched($lesson , $user) {
+    public function onLessonWatched(Lesson $lesson , User $user) {
 
         $user->lessons()->updateExistingPivot($lesson->id, ['watched' => true]);
         $type = 'LESSON_WATCHED';
