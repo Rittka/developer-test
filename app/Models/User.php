@@ -204,10 +204,12 @@ class User extends Authenticatable
     function isNewAchievement($type){
         if($this->isCommentWritten($type)){
             $count = $this->comments->count();
+            $achievement = $this->currentCommentAchievement;
         }else{
             $count = $this->watched()->count();
+            $achievement = $this->currentLessonAchievement;
         }
-        $achievement = $this->currentAchievement($type);
+
         if($count > $achievement->goal){
             $next_achievement = $this->nextAchievement($type);
             if($count >= $next_achievement->goal){

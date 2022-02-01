@@ -20,7 +20,7 @@ class AchievementUnlocked
         $user_id = $comment->user_id ;
         $user = User::find($user_id);
         $type = 'COMMENT_WRITTEN';
-        $commentAchievement = $user->currentAchievement($type);
+        $commentAchievement = $user->currentCommentAchievement;
 
         if(isset($commentAchievement)){
            $newAchievement = $user->isNewAchievement($type);
@@ -40,7 +40,7 @@ class AchievementUnlocked
 
         $user->lessons()->updateExistingPivot($lesson->id, ['watched' => true]);
         $type = 'LESSON_WATCHED';
-        $lesson_achievement = $user->currentAchievement($type);
+        $lesson_achievement = $user->currentLessonAchievement;
 
         if(isset($lessonAchievement)){
            $newAchievement = $user->isNewAchievement($type);
@@ -84,7 +84,7 @@ class AchievementUnlocked
     }
 
     function CanUnlockBadge($unlocked_achievement_count ,  $goal){
-        if($unlocked_achievement_count > $goal){
+        if($unlocked_achievement_count >= $goal){
             return true;
         }else{
             return false;
